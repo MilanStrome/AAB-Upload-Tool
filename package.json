@@ -1,0 +1,9 @@
+{
+  "name": "play-release-manager",
+  "version": "1.0.0",
+  "description": "Internal Google Play release tool",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=18" }
+}
