@@ -1,0 +1,60 @@
+Option 1 — Shared folder / Google Drive (simplest)
+Just share both files (play-release-manager.html + server.js) via Google Drive, Dropbox, or any shared folder.
+Each team member:
+
+Downloads both files into the same folder
+Installs Node.js 18+ from nodejs.org (one time)
+Runs node server.js in a terminal
+Opens play-release-manager.html in their browser
+
+That's it. No install, no build step, no deployment.
+
+Option 2 — GitHub private repo (recommended for a team)
+bashgit init
+git add play-release-manager.html server.js
+git commit -m "Play Release Manager"
+# push to your private GitHub/GitLab repo
+Team members just git pull to get updates. You can add a simple README.md:
+markdown## Play Release Manager
+
+### Setup (one time)
+1. Install Node.js 18+ from https://nodejs.org
+2. Clone this repo
+
+### Every time
+1. Run: node server.js
+2. Open: play-release-manager.html in Chrome/Edge/Firefox
+3. Passcode: mk
+
+Option 3 — Package as a tiny npm script (cleanest UX)
+Add a package.json so team members just type npm start:
+json{
+  "name": "play-release-manager",
+  "version": "1.0.0",
+  "description": "Internal Google Play release tool",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=18" }
+}
+Then the workflow is just:
+bashnpm start
+# open play-release-manager.html
+
+Important things to tell your team
+Each person needs their own Google OAuth:
+
+They sign in with their own Google account
+Their account must have access to the Play Console apps
+The OAuth Client ID is shared (already embedded in the tool)
+
+The OAuth Client ID needs their localhost origin added:
+
+Go to Google Cloud Console → Credentials
+Edit the OAuth client → Authorized JavaScript Origins
+Make sure http://localhost is listed (you likely already did this)
+
+Passcode mk is a UI-only lock — remind them it's not real security, just a accidental-click guard.
+
+My recommendation
+Option 2 (private GitHub repo) + Option 3 (package.json). Takes 5 minutes to set up, and every future update you make is one git pull away for the whole team.

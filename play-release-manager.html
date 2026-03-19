@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Play Release Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+/* ── CSS Variables & Themes ─────────────────────────────── */
+:root {
+  --font-ui: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --sidebar-w: 220px;
+  --transition: 0.18s ease;
+}
+
+/* Theme: Light Classic (default) */
+body.theme-light-classic {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface2: #f0f1f3;
+  --border: #dde1e7;
+  --text: #1a1d23;
+  --text-muted: #6b7280;
+  --accent: #1a56db;
+  --accent-hover: #1447c0;
+  --accent-text: #ffffff;
+  --success: #057a55;
+  --success-bg: #def7ec;
+  --error: #c81e1e;
+  --error-bg: #fde8e8;
+  --warn: #92400e;
+  --warn-bg: #fef3c7;
+  --info: #1c64f2;
+  --info-bg: #ebf5ff;
+  --sidebar-bg: #1e2433;
+  --sidebar-text: #c9d1e0;
+  --sidebar-active: #3b82f6;
+  --sidebar-hover: #2a3246;
+  --tag-bg: #e8edf5;
+  --tag-text: #374151;
+}
+
+/* Theme: Light Soft */
+body.theme-light-soft {
+  --bg: #f9f7f4;
+  --surface: #ffffff;
+  --surface2: #f2efe9;
+  --border: #e5e0d8;
+  --text: #2c2825;
+  --text-muted: #7c7068;
+  --accent: #b45309;
+  --accent-hover: #92400e;
+  --accent-text: #ffffff;
+  --success: #065f46;
+  --success-bg: #d1fae5;
+  --error: #991b1b;
+  --error-bg: #fee2e2;
+  --warn: #78350f;
+  --warn-bg: #fef9c3;
+  --info: #1e40af;
+  --info-bg: #dbeafe;
+  --sidebar-bg: #2c2420;
+  --sidebar-text: #d6cec5;
+  --sidebar-active: #f59e0b;
+  --sidebar-hover: #3d3028;
+  --tag-bg: #fef3c7;
+  --tag-text: #78350f;
+}
+
+/* Theme: Light Clean */
+body.theme-light-clean {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface2: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --accent: #0891b2;
+  --accent-hover: #0e7490;
+  --accent-text: #ffffff;
+  --success: #047857;
+  --success-bg: #ecfdf5;
+  --error: #b91c1c;
+  --error-bg: #fef2f2;
+  --warn: #b45309;
+  --warn-bg: #fffbeb;
+  --info: #0284c7;
+  --info-bg: #f0f9ff;
+  --sidebar-bg: #0f172a;
+  --sidebar-text: #94a3b8;
+  --sidebar-active: #06b6d4;
+  --sidebar-hover: #1e293b;
+  --tag-bg: #e0f2fe;
+  --tag-text: #0369a1;
+}
+
+/* Theme: Dark Blue */
+body.theme-dark-blue {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #21262d;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-muted: #7d8590;
+  --accent: #388bfd;
+  --accent-hover: #58a6ff;
+  --accent-text: #ffffff;
+  --success: #3fb950;
+  --success-bg: #0d2818;
+  --error: #f85149;
+  --error-bg: #2d1116;
+  --warn: #d29922;
+  --warn-bg: #2a1f08;
+  --info: #58a6ff;
+  --info-bg: #0d1f38;
+  --sidebar-bg: #010409;
+  --sidebar-text: #8b949e;
+  --sidebar-active: #58a6ff;
+  --sidebar-hover: #161b22;
+  --tag-bg: #1f2a38;
+  --tag-text: #79c0ff;
+}
+
+/* Theme: Dark Gray */
+body.theme-dark-gray {
+  --bg: #18181b;
+  --surface: #242428;
+  --surface2: #2e2e32;
+  --border: #3f3f46;
+  --text: #fafafa;
+  --text-muted: #a1a1aa;
+  --accent: #a78bfa;
+  --accent-hover: #c4b5fd;
+  --accent-text: #ffffff;
+  --success: #4ade80;
+  --success-bg: #14261f;
+  --error: #f87171;
+  --error-bg: #2c1515;
+  --warn: #fbbf24;
+  --warn-bg: #271f0a;
+  --info: #60a5fa;
+  --info-bg: #0f1d32;
+  --sidebar-bg: #09090b;
+  --sidebar-text: #71717a;
+  --sidebar-active: #a78bfa;
+  --sidebar-hover: #18181b;
+  --tag-bg: #27272a;
+  --tag-text: #c4b5fd;
+}
+
+/* ── Reset & Base ────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background var(--transition), color var(--transition);
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { cursor: pointer; font-family: var(--font-ui); }
+input, select, textarea { font-family: var(--font-ui); }
+code, .mono { font-family: var(--font-mono); }
+
+/* ── Lock Screen ─────────────────────────────────────────── */
+#lock-screen {
+  position: fixed; inset: 0;
+  background: #0d1117;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.lock-card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: var(--radius-lg);
+  padding: 40px 48px;
+  width: 360px;
+  text-align: center;
+}
+.lock-logo {
+  width: 52px; height: 52px;
+  background: linear-gradient(135deg, #388bfd, #1a56db);
+  border-radius: 12px;
+  margin: 0 auto 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.lock-title {
+  font-size: 1.3rem; font-weight: 700;
+  color: #e6edf3; margin-bottom: 6px;
+}
+.lock-sub { font-size: 0.82rem; color: #7d8590; margin-bottom: 28px; }
+.lock-input {
+  width: 100%; padding: 10px 14px;
+  background: #21262d; border: 1px solid #30363d;
+  border-radius: var(--radius); color: #e6edf3;
+  font-size: 1.1rem; letter-spacing: 0.25em;
+  text-align: center; outline: none; margin-bottom: 14px;
+  transition: border-color var(--transition);
+}
+.lock-input:focus { border-color: #388bfd; }
+.lock-btn {
+  width: 100%; padding: 11px;
+  background: #388bfd; color: #fff;
+  border: none; border-radius: var(--radius);
+  font-size: 0.9rem; font-weight: 600;
+  transition: background var(--transition);
+}
+.lock-btn:hover { background: #58a6ff; }
+.lock-error { color: #f85149; font-size: 0.8rem; margin-top: 8px; min-height: 18px; }
+
+/* ── App Shell ───────────────────────────────────────────── */
+#app-shell {
+  display: none;
+  min-height: 100vh;
+}
+#app-shell.visible { display: flex; }
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: background var(--transition);
+}
+.sidebar-header {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-logo-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--sidebar-active), #1447c0);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.sidebar-logo-text { font-size: 0.9rem; font-weight: 700; color: #fff; line-height: 1.2; }
+.sidebar-logo-sub { font-size: 0.68rem; color: var(--sidebar-text); font-weight: 400; }
+
+.sidebar-nav { flex: 1; padding: 10px 0; overflow-y: auto; }
+.nav-section-label {
+  padding: 12px 16px 4px;
+  font-size: 0.65rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.25);
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px;
+  color: var(--sidebar-text);
+  cursor: pointer; border: none; background: none;
+  width: 100%; text-align: left;
+  font-size: 0.85rem; font-weight: 500;
+  border-radius: 0;
+  transition: background var(--transition), color var(--transition);
+}
+.nav-item:hover { background: var(--sidebar-hover); color: #fff; }
+.nav-item.active {
+  background: var(--sidebar-hover);
+  color: var(--sidebar-active);
+  border-left: 2px solid var(--sidebar-active);
+}
+.nav-item-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+
+.sidebar-footer {
+  padding: 14px 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.auth-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.05);
+  border-radius: var(--radius);
+}
+.auth-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sidebar-active), #1447c0);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: #fff; font-weight: 700; flex-shrink: 0;
+  overflow: hidden;
+}
+.auth-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.auth-info { flex: 1; min-width: 0; }
+.auth-name { font-size: 0.75rem; color: #fff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.auth-status-text { font-size: 0.65rem; color: var(--sidebar-text); }
+.auth-sign-btn {
+  font-size: 0.7rem; padding: 4px 8px;
+  border-radius: 4px; border: 1px solid rgba(255,255,255,0.15);
+  background: transparent; color: var(--sidebar-text);
+  transition: all var(--transition);
+}
+.auth-sign-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+/* ── Main Content ────────────────────────────────────────── */
+.main-content {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+
+/* ── Top Bar ─────────────────────────────────────────────── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 54px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.topbar-title { font-size: 1rem; font-weight: 700; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.auth-status-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 20px;
+  font-size: 0.75rem; font-weight: 500;
+}
+.auth-status-badge.signed-in { background: var(--success-bg); color: var(--success); }
+.auth-status-badge.signed-out { background: var(--error-bg); color: var(--error); }
+.auth-status-badge::before { content: '●'; font-size: 8px; }
+
+/* ── Page Sections ───────────────────────────────────────── */
+.page { display: none; padding: 24px; flex: 1; }
+.page.active { display: block; }
+
+/* ── Cards & Grid ────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 0.82rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 6px;
+}
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media(max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+/* ── Stat Cards ──────────────────────────────────────────── */
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.stat-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.stat-value { font-size: 1.1rem; font-weight: 700; font-family: var(--font-mono); color: var(--text); word-break: break-all; }
+.stat-sub { font-size: 0.72rem; color: var(--text-muted); }
+
+/* ── Forms ───────────────────────────────────────────────── */
+.form-group { margin-bottom: 14px; }
+.form-label {
+  display: block; margin-bottom: 5px;
+  font-size: 0.8rem; font-weight: 600; color: var(--text);
+}
+.form-label .optional { color: var(--text-muted); font-weight: 400; font-size: 0.73rem; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 9px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  font-size: 0.85rem; outline: none;
+  transition: border-color var(--transition);
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+.form-select { appearance: none; cursor: pointer; }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-hint { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+
+/* File Input */
+.file-drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 16px 14px;
+  text-align: center; cursor: pointer;
+  transition: all var(--transition);
+  background: var(--surface2);
+}
+.file-drop-zone:hover, .file-drop-zone.dragover {
+  border-color: var(--accent); background: var(--info-bg);
+}
+.file-drop-zone.has-file { border-color: var(--success); background: var(--success-bg); }
+.file-drop-label { font-size: 0.8rem; color: var(--text-muted); }
+.file-drop-label strong { color: var(--accent); }
+.file-drop-name { font-size: 0.8rem; font-family: var(--font-mono); color: var(--success); margin-top: 4px; }
+.file-drop-input { display: none; }
+
+/* Checkbox toggle */
+.toggle-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px; cursor: pointer;
+}
+.toggle-row input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+.toggle-row-label { font-size: 0.83rem; font-weight: 500; flex: 1; }
+.toggle-row-sub { font-size: 0.72rem; color: var(--text-muted); }
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 16px; border-radius: var(--radius);
+  font-size: 0.83rem; font-weight: 600; border: none;
+  cursor: pointer; transition: all var(--transition);
+  white-space: nowrap;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: var(--accent-text); }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-secondary {
+  background: var(--surface2); color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover:not(:disabled) { background: var(--border); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger { background: var(--error); color: #fff; }
+.btn-sm { padding: 6px 11px; font-size: 0.77rem; }
+.btn-xs { padding: 4px 8px; font-size: 0.72rem; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── Alerts ──────────────────────────────────────────────── */
+.alert {
+  padding: 11px 14px; border-radius: var(--radius);
+  font-size: 0.82rem; margin-bottom: 12px;
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.alert-icon { flex-shrink: 0; margin-top: 1px; }
+.alert-success { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+.alert-error { background: var(--error-bg); color: var(--error); border: 1px solid var(--error); }
+.alert-warn { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn); }
+.alert-info { background: var(--info-bg); color: var(--info); border: 1px solid var(--info); }
+
+/* ── Progress ────────────────────────────────────────────── */
+.progress-bar-wrap {
+  background: var(--surface2); border-radius: 999px; height: 6px;
+  overflow: hidden; margin: 8px 0;
+}
+.progress-bar-fill {
+  height: 100%; background: var(--accent);
+  border-radius: 999px; transition: width 0.3s ease;
+}
+
+/* ── Step Indicator ──────────────────────────────────────── */
+.steps { display: flex; gap: 0; margin-bottom: 20px; }
+.step {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  position: relative;
+}
+.step:not(:last-child)::after {
+  content: ''; position: absolute;
+  top: 14px; left: 55%; width: 90%; height: 2px;
+  background: var(--border);
+  z-index: 0;
+}
+.step.done:not(:last-child)::after { background: var(--success); }
+.step-circle {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid var(--border); background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+  z-index: 1; position: relative;
+}
+.step.active .step-circle { border-color: var(--accent); color: var(--accent); background: var(--info-bg); }
+.step.done .step-circle { border-color: var(--success); background: var(--success); color: #fff; }
+.step-label { font-size: 0.68rem; color: var(--text-muted); text-align: center; }
+.step.active .step-label { color: var(--accent); }
+.step.done .step-label { color: var(--success); }
+
+/* ── App Selector ────────────────────────────────────────── */
+.app-group-label {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); padding: 8px 12px 4px;
+}
+.app-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; cursor: pointer;
+  border: 1px solid transparent; border-radius: var(--radius);
+  transition: all var(--transition); margin-bottom: 4px;
+  background: var(--surface2);
+}
+.app-option:hover { border-color: var(--accent); background: var(--info-bg); }
+.app-option.selected { border-color: var(--accent); background: var(--info-bg); }
+.app-option-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0; color: #fff;
+}
+.app-option-info { flex: 1; min-width: 0; }
+.app-option-name { font-size: 0.83rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-option-pkg { font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-tag {
+  font-size: 0.65rem; font-weight: 700; padding: 2px 6px;
+  border-radius: 4px; background: var(--tag-bg); color: var(--tag-text);
+  white-space: nowrap; flex-shrink: 0;
+}
+
+/* ── Logs ────────────────────────────────────────────────── */
+.log-entry {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+.log-entry:last-child { border-bottom: none; }
+.log-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.log-badge {
+  font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 4px;
+  text-transform: uppercase;
+}
+.log-badge.success { background: var(--success-bg); color: var(--success); }
+.log-badge.error { background: var(--error-bg); color: var(--error); }
+.log-badge.info { background: var(--info-bg); color: var(--info); }
+.log-badge.warn { background: var(--warn-bg); color: var(--warn); }
+.log-time { font-family: var(--font-mono); color: var(--text-muted); font-size: 0.72rem; }
+.log-action { font-weight: 600; }
+.log-message { color: var(--text-muted); margin-top: 2px; }
+.log-json-toggle {
+  font-size: 0.72rem; color: var(--accent); cursor: pointer;
+  margin-top: 6px; display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: none; padding: 0; font-family: var(--font-ui);
+}
+.log-json-panel {
+  display: none; margin-top: 8px;
+  background: var(--surface2); border-radius: var(--radius);
+  padding: 10px 12px; overflow: auto; max-height: 200px;
+}
+.log-json-panel.open { display: block; }
+.log-json-panel pre { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text); white-space: pre-wrap; word-break: break-all; }
+
+/* ── Version Code / Response Display ────────────────────── */
+.version-code-banner {
+  background: var(--success-bg);
+  border: 1px solid var(--success);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin: 12px 0;
+  display: none;
+}
+.version-code-banner.visible { display: block; }
+.version-code-banner-label { font-size: 0.72rem; font-weight: 700; color: var(--success); text-transform: uppercase; letter-spacing: 0.06em; }
+.version-code-banner-value { font-size: 1.4rem; font-weight: 700; font-family: var(--font-mono); color: var(--success); }
+
+/* ── Internal Test Link ──────────────────────────────────── */
+.itl-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.itl-row:last-child { border-bottom: none; }
+.itl-info { flex: 1; min-width: 0; }
+.itl-app-name { font-size: 0.85rem; font-weight: 600; }
+.itl-pkg { font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-muted); }
+.itl-link-input { flex: 2; padding: 7px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 0.8rem; font-family: var(--font-mono); outline: none; }
+.itl-link-input:focus { border-color: var(--accent); }
+.itl-actions { display: flex; gap: 6px; }
+
+/* ── Dashboard App Card ──────────────────────────────────── */
+.dash-app-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.dash-app-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+}
+.dash-app-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: #fff; flex-shrink: 0;
+}
+.dash-app-name { font-size: 1rem; font-weight: 700; }
+.dash-app-pkg { font-size: 0.73rem; font-family: var(--font-mono); color: var(--text-muted); }
+.dash-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.dash-meta-item { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+.dash-itl-row {
+  background: var(--surface2); border-radius: var(--radius);
+  padding: 10px 14px; margin-top: 10px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.dash-itl-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+.dash-itl-link { font-size: 0.78rem; font-family: var(--font-mono); color: var(--accent); flex: 1; word-break: break-all; }
+.dash-itl-missing { font-size: 0.78rem; color: var(--text-muted); font-style: italic; flex: 1; }
+
+/* ── Settings ────────────────────────────────────────────── */
+.settings-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-label { flex: 1; }
+.settings-label-title { font-size: 0.85rem; font-weight: 600; }
+.settings-label-sub { font-size: 0.72rem; color: var(--text-muted); }
+.settings-control { flex-shrink: 0; }
+
+/* ── Upload flow states ──────────────────────────────────── */
+.upload-stage {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: var(--radius);
+  background: var(--surface2); margin-bottom: 6px;
+  font-size: 0.82rem;
+}
+.upload-stage-icon { width: 20px; text-align: center; flex-shrink: 0; }
+.upload-stage-label { flex: 1; }
+.upload-stage-status { font-size: 0.72rem; font-family: var(--font-mono); }
+.upload-stage.pending .upload-stage-icon { color: var(--text-muted); }
+.upload-stage.running .upload-stage-icon { color: var(--accent); }
+.upload-stage.done .upload-stage-icon { color: var(--success); }
+.upload-stage.error .upload-stage-icon { color: var(--error); }
+
+/* ── Divider ─────────────────────────────────────────────── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+/* ── Empty State ─────────────────────────────────────────── */
+.empty-state {
+  text-align: center; padding: 40px 20px;
+  color: var(--text-muted);
+}
+.empty-state-icon { font-size: 2.5rem; margin-bottom: 10px; }
+.empty-state-title { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.empty-state-sub { font-size: 0.82rem; }
+
+/* ── Spinner ─────────────────────────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media(max-width: 700px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { transform: translateX(-220px); }
+  .main-content { margin-left: 0; }
+}
+
+/* ── Misc ────────────────────────────────────────────────── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.section-title { font-size: 1.1rem; font-weight: 700; }
+.section-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+.text-muted { color: var(--text-muted); }
+.text-mono { font-family: var(--font-mono); }
+.text-success { color: var(--success); }
+.text-error { color: var(--error); }
+.mt-0 { margin-top: 0; }
+.mb-0 { margin-bottom: 0; }
+.w-full { width: 100%; }
+.flex { display: flex; }
+.flex-1 { flex: 1; }
+.gap-8 { gap: 8px; }
+.items-center { align-items: center; }
+.hidden { display: none !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* Theme select */
+.theme-swatch {
+  display: inline-block; width: 16px; height: 16px;
+  border-radius: 3px; vertical-align: middle; margin-right: 6px;
+  border: 1px solid rgba(0,0,0,0.15);
+}
+</style>
+</head>
+<body class="theme-light-classic">
+
+<!-- ── Lock Screen ─────────────────────────────────────── -->
+<div id="lock-screen">
+  <div class="lock-card">
+    <div class="lock-logo">🚀</div>
+    <div class="lock-title">Play Release Manager</div>
+    <div class="lock-sub">Internal tool — enter passcode to continue</div>
+    <input class="lock-input" type="password" id="lock-input" placeholder="••••" maxlength="10" autocomplete="off">
+    <button class="lock-btn" id="lock-btn" onclick="attemptUnlock()">Unlock</button>
+    <div class="lock-error" id="lock-error"></div>
+  </div>
+</div>
+
+<!-- ── App Shell ───────────────────────────────────────── -->
+<div id="app-shell">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">🚀</div>
+        <div>
+          <div class="sidebar-logo-text">Play Manager</div>
+          <div class="sidebar-logo-sub">Internal Release Tool</div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <button class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard">
+        <span class="nav-item-icon">📊</span> Dashboard
+      </button>
+      <button class="nav-item" onclick="showPage('upload')" data-page="upload">
+        <span class="nav-item-icon">📦</span> Release Upload
+      </button>
+      <div class="nav-section-label">Tools</div>
+      <button class="nav-item" onclick="showPage('itl')" data-page="itl">
+        <span class="nav-item-icon">🔗</span> Internal Test Links
+      </button>
+      <button class="nav-item" onclick="showPage('logs')" data-page="logs">
+        <span class="nav-item-icon">📋</span> Logs
+        <span id="log-badge" class="hidden" style="margin-left:auto;background:var(--error);color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:99px;font-weight:700;">0</span>
+      </button>
+      <div class="nav-section-label">Config</div>
+      <button class="nav-item" onclick="showPage('settings')" data-page="settings">
+        <span class="nav-item-icon">⚙️</span> Settings
+      </button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="auth-pill">
+        <div class="auth-avatar" id="sidebar-avatar">?</div>
+        <div class="auth-info">
+          <div class="auth-name" id="sidebar-name">Not signed in</div>
+          <div class="auth-status-text" id="sidebar-status">Google OAuth required</div>
+        </div>
+        <button class="auth-sign-btn" id="sidebar-auth-btn" onclick="handleAuthClick()">Sign In</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <span class="auth-status-badge" id="proxy-badge" style="margin-right:4px;cursor:pointer;" onclick="checkProxyStatus()" title="Click to re-check proxy">⬜ Proxy</span>
+        <span class="auth-status-badge signed-out" id="auth-badge">Signed Out</span>
+      </div>
+    </div>
+
+    <!-- ── DASHBOARD PAGE ─────────────────────────────── -->
+    <div class="page active" id="page-dashboard">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Dashboard</div>
+          <div class="section-sub">Overview of your managed apps</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="showPage('upload')">📦 New Release</button>
+      </div>
+
+      <div id="dashboard-apps-container">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- ── RELEASE UPLOAD PAGE ───────────────────────── -->
+    <div class="page" id="page-upload">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Release Upload</div>
+          <div class="section-sub">Upload AAB and publish to Google Play tracks</div>
+        </div>
+      </div>
+
+      <!-- Proxy status banner -->
+      <div id="proxy-status-banner" class="alert alert-warn" style="margin-bottom:14px;">
+        <span class="alert-icon">🔌</span>
+        <span id="proxy-status-msg">Checking local proxy server… <button class="btn btn-sm btn-secondary" style="margin-left:8px;" onclick="checkProxyStatus()">Recheck</button></span>
+      </div>
+
+      <!-- Auth gate -->
+      <div id="upload-auth-gate" class="alert alert-warn hidden">
+        <span class="alert-icon">⚠️</span>
+        <span>You must be signed in with Google to upload releases. <button class="btn btn-sm btn-secondary" onclick="handleAuthClick()" style="margin-left:8px;">Sign In</button></span>
+      </div>
+
+      <!-- Steps -->
+      <div class="steps" id="upload-steps">
+        <div class="step active" id="step-1"><div class="step-circle">1</div><div class="step-label">Select App</div></div>
+        <div class="step" id="step-2"><div class="step-circle">2</div><div class="step-label">Upload AAB</div></div>
+        <div class="step" id="step-3"><div class="step-circle">3</div><div class="step-label">Configure</div></div>
+        <div class="step" id="step-4"><div class="step-circle">4</div><div class="step-label">Commit</div></div>
+      </div>
+
+      <!-- Upload Result Banner -->
+      <div class="version-code-banner" id="upload-result-banner">
+        <div class="version-code-banner-label">✅ Upload Successful — Version Code</div>
+        <div class="version-code-banner-value" id="result-version-code">—</div>
+        <div style="font-size:0.75rem;color:var(--success);margin-top:4px;">Edit ID: <span id="result-edit-id" class="text-mono">—</span></div>
+      </div>
+
+      <div id="upload-result-alert" class="hidden"></div>
+
+      <div class="grid-2">
+        <!-- Left Column -->
+        <div>
+          <!-- App Selector -->
+          <div class="card">
+            <div class="card-title">📱 Select App</div>
+            <div class="toggle-row" onclick="toggleManualPkg()" style="margin-bottom:12px;">
+              <input type="checkbox" id="manual-pkg-toggle">
+              <div>
+                <div class="toggle-row-label">Use manual package name</div>
+                <div class="toggle-row-sub">Type any package name instead of selecting from list</div>
+              </div>
+            </div>
+            <div id="app-selector-list">
+              <!-- Apps filled by JS -->
+            </div>
+            <div id="manual-pkg-area" class="hidden">
+              <div class="form-group mt-0">
+                <label class="form-label">Package Name</label>
+                <input class="form-input text-mono" type="text" id="manual-pkg-input" placeholder="com.example.myapp" oninput="onManualPkgChange()">
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:10px;margin-bottom:0;">
+              <label class="form-label">Selected Package</label>
+              <input class="form-input text-mono" type="text" id="selected-pkg-display" readonly placeholder="No app selected">
+            </div>
+          </div>
+
+          <!-- AAB Upload -->
+          <div class="card">
+            <div class="card-title">📦 Bundle File</div>
+            <div class="form-group">
+              <label class="form-label">AAB File <span style="color:var(--error)">*</span></label>
+              <div class="file-drop-zone" id="aab-drop-zone" onclick="document.getElementById('aab-file-input').click()" ondragover="handleDragOver(event,'aab-drop-zone')" ondragleave="handleDragLeave('aab-drop-zone')" ondrop="handleDrop(event,'aab','aab-drop-zone')">
+                <div class="file-drop-label">Drop <strong>.aab</strong> file here or <strong>click to browse</strong></div>
+                <div class="file-drop-name" id="aab-filename">No file selected</div>
+              </div>
+              <input type="file" class="file-drop-input" id="aab-file-input" accept=".aab" onchange="handleFileSelect(event,'aab','aab-drop-zone','aab-filename')">
+            </div>
+
+            <!-- Optional files -->
+            <div class="toggle-row" onclick="toggleOptional('mapping')">
+              <input type="checkbox" id="toggle-mapping">
+              <div>
+                <div class="toggle-row-label">Upload Mapping File</div>
+                <div class="toggle-row-sub">ProGuard mapping.txt for deobfuscation</div>
+              </div>
+            </div>
+            <div id="mapping-area" class="hidden">
+              <div class="form-group">
+                <div class="file-drop-zone" id="mapping-drop-zone" onclick="document.getElementById('mapping-file-input').click()" ondragover="handleDragOver(event,'mapping-drop-zone')" ondragleave="handleDragLeave('mapping-drop-zone')" ondrop="handleDrop(event,'mapping','mapping-drop-zone')">
+                  <div class="file-drop-label">Drop <strong>mapping.txt</strong> here or <strong>click to browse</strong></div>
+                  <div class="file-drop-name" id="mapping-filename">No file selected</div>
+                </div>
+                <input type="file" class="file-drop-input" id="mapping-file-input" accept=".txt,.gz" onchange="handleFileSelect(event,'mapping','mapping-drop-zone','mapping-filename')">
+              </div>
+            </div>
+
+            <div class="toggle-row" onclick="toggleOptional('symbols')">
+              <input type="checkbox" id="toggle-symbols">
+              <div>
+                <div class="toggle-row-label">Upload Native Symbols</div>
+                <div class="toggle-row-sub">Native crash symbols ZIP</div>
+              </div>
+            </div>
+            <div id="symbols-area" class="hidden">
+              <div class="form-group">
+                <div class="file-drop-zone" id="symbols-drop-zone" onclick="document.getElementById('symbols-file-input').click()" ondragover="handleDragOver(event,'symbols-drop-zone')" ondragleave="handleDragLeave('symbols-drop-zone')" ondrop="handleDrop(event,'symbols','symbols-drop-zone')">
+                  <div class="file-drop-label">Drop <strong>.zip</strong> symbols here or <strong>click to browse</strong></div>
+                  <div class="file-drop-name" id="symbols-filename">No file selected</div>
+                </div>
+                <input type="file" class="file-drop-input" id="symbols-file-input" accept=".zip" onchange="handleFileSelect(event,'symbols','symbols-drop-zone','symbols-filename')">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div>
+          <!-- Release Config -->
+          <div class="card">
+            <div class="card-title">⚙️ Release Configuration</div>
+
+            <div class="toggle-row" onclick="toggleOptional('track')">
+              <input type="checkbox" id="toggle-track" checked>
+              <div>
+                <div class="toggle-row-label">Assign to Track</div>
+                <div class="toggle-row-sub">Assign uploaded bundle to a release track</div>
+              </div>
+            </div>
+            <div id="track-area">
+              <div class="form-group">
+                <label class="form-label">Track</label>
+                <select class="form-select" id="track-select">
+                  <option value="internal">Internal Testing</option>
+                  <option value="alpha">Closed Testing (Alpha)</option>
+                  <option value="beta">Open Testing (Beta)</option>
+                  <option value="production">Production</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Release Name <span class="optional">(optional)</span></label>
+                <input class="form-input" type="text" id="release-name" placeholder="e.g. v2.1.0">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Release Notes <span class="optional">(optional)</span></label>
+                <textarea class="form-textarea" id="release-notes" placeholder="What's new in this release..."></textarea>
+                <div class="form-hint">Will be added as en-US release notes</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Release Status</label>
+                <select class="form-select" id="release-status">
+                  <option value="draft">Draft</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="toggle-row" onclick="toggleOptional('commit')">
+              <input type="checkbox" id="toggle-commit" checked>
+              <div>
+                <div class="toggle-row-label">Commit Edit</div>
+                <div class="toggle-row-sub">Finalize and publish the edit after all uploads</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upload Stages -->
+          <div class="card">
+            <div class="card-title">⏱ Upload Progress</div>
+            <div id="upload-stages">
+              <div class="upload-stage" id="stage-edit"><span class="upload-stage-icon">⬜</span><span class="upload-stage-label">Create Edit</span><span class="upload-stage-status" id="stage-edit-status">waiting</span></div>
+              <div class="upload-stage" id="stage-aab"><span class="upload-stage-icon">⬜</span><span class="upload-stage-label">Upload AAB</span><span class="upload-stage-status" id="stage-aab-status">waiting</span></div>
+              <div class="upload-stage" id="stage-mapping"><span class="upload-stage-icon">⬜</span><span class="upload-stage-label">Upload Mapping File</span><span class="upload-stage-status" id="stage-mapping-status">skipped</span></div>
+              <div class="upload-stage" id="stage-symbols"><span class="upload-stage-icon">⬜</span><span class="upload-stage-label">Upload Native Symbols</span><span class="upload-stage-status" id="stage-symbols-status">skipped</span></div>
+              <div class="upload-stage" id="stage-track"><span class="upload-stage-icon">⬜</span><span class="upload-stage-label">Assign to Track</span><span class="upload-stage-status" id="stage-track-status">skipped</span></div>
+              <div class="upload-stage" id="stage-commit"><span class="upload-stage-icon">⬜</span><span class="upload-stage-label">Commit Edit</span><span class="upload-stage-status" id="stage-commit-status">skipped</span></div>
+            </div>
+            <div class="progress-bar-wrap" id="upload-progress-wrap" style="display:none">
+              <div class="progress-bar-fill" id="upload-progress-fill" style="width:0%"></div>
+            </div>
+            <div style="margin-top:14px;">
+              <button class="btn btn-primary w-full" id="upload-btn" onclick="startUpload()">
+                🚀 Start Upload
+              </button>
+            </div>
+
+            <!-- Post-upload ITL -->
+            <div id="post-upload-itl" class="hidden" style="margin-top:14px;padding:12px 14px;background:var(--success-bg);border:1px solid var(--success);border-radius:var(--radius);">
+              <div style="font-size:0.78rem;font-weight:700;color:var(--success);margin-bottom:8px;">✅ Release published — Internal Test Link</div>
+              <div id="post-itl-link" style="font-size:0.78rem;font-family:var(--font-mono);color:var(--success);word-break:break-all;margin-bottom:8px;">—</div>
+              <div class="btn-group">
+                <button class="btn btn-success btn-sm" onclick="openPostItl()">🔗 Open Link</button>
+                <button class="btn btn-secondary btn-sm" onclick="copyPostItl()">📋 Copy</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Raw API Response -->
+      <div class="card" id="raw-response-card" style="display:none">
+        <div class="card-title" style="cursor:pointer" onclick="toggleRawPanel()">
+          📄 Raw API Response <span id="raw-toggle-icon">▼</span>
+        </div>
+        <div id="raw-response-panel">
+          <pre style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text);white-space:pre-wrap;word-break:break-all;overflow:auto;max-height:350px;" id="raw-response-content"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INTERNAL TEST LINKS PAGE ──────────────────── -->
+    <div class="page" id="page-itl">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Internal Test Links</div>
+          <div class="section-sub">Manage internal testing invitation links (not available via API — managed manually)</div>
+        </div>
+      </div>
+
+      <div class="alert alert-info">
+        <span class="alert-icon">ℹ️</span>
+        <span>Internal test links are not accessible via the Google Play Developer API. Add your invite URLs manually here and they'll be saved locally in your browser.</span>
+      </div>
+
+      <div class="card">
+        <div id="itl-rows-container">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <div id="itl-save-alert" class="hidden"></div>
+    </div>
+
+    <!-- ── LOGS PAGE ──────────────────────────────────── -->
+    <div class="page" id="page-logs">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Logs</div>
+          <div class="section-sub">Activity and API call history</div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-secondary btn-sm" onclick="exportLogs()">⬇️ Export JSON</button>
+          <button class="btn btn-danger btn-sm" onclick="clearLogs()">🗑 Clear</button>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div id="logs-container">
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <div class="empty-state-title">No logs yet</div>
+            <div class="empty-state-sub">Activity from upload operations will appear here</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS PAGE ─────────────────────────────── -->
+    <div class="page" id="page-settings">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Settings</div>
+          <div class="section-sub">Preferences and configuration</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎨 Appearance</div>
+        <div class="settings-row">
+          <div class="settings-label">
+            <div class="settings-label-title">Theme</div>
+            <div class="settings-label-sub">Choose dashboard color theme</div>
+          </div>
+          <div class="settings-control">
+            <select class="form-select" id="theme-select" onchange="applyTheme(this.value)">
+              <option value="theme-light-classic">Light Classic</option>
+              <option value="theme-light-soft">Light Soft</option>
+              <option value="theme-light-clean">Light Clean</option>
+              <option value="theme-dark-blue">Dark Blue</option>
+              <option value="theme-dark-gray">Dark Gray</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-label">
+            <div class="settings-label-title">Show Raw JSON Panel</div>
+            <div class="settings-label-sub">Toggle API response panel after upload</div>
+          </div>
+          <div class="settings-control">
+            <input type="checkbox" id="setting-show-raw" style="accent-color:var(--accent);width:16px;height:16px;" onchange="saveSetting('showRaw',this.checked)">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🔐 Authentication</div>
+        <div class="settings-row">
+          <div class="settings-label">
+            <div class="settings-label-title">OAuth Client ID</div>
+            <div class="settings-label-sub">Google API Web Client ID</div>
+          </div>
+          <div class="settings-control" style="flex:2;max-width:400px;">
+            <input class="form-input text-mono" type="text" id="setting-client-id" value="566889120703-7jjmp8ond3q2knnitfk0kvnm4asde5mk.apps.googleusercontent.com" readonly style="font-size:0.72rem;">
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-label">
+            <div class="settings-label-title">Auth Status</div>
+          </div>
+          <div class="settings-control">
+            <span id="settings-auth-status" class="auth-status-badge signed-out">Signed Out</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-label"></div>
+          <div class="settings-control">
+            <button class="btn btn-secondary btn-sm" id="settings-auth-btn" onclick="handleAuthClick()">Sign In</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎛 Release Defaults</div>
+        <div class="settings-row">
+          <div class="settings-label">
+            <div class="settings-label-title">Default Track</div>
+            <div class="settings-label-sub">Pre-selected track for new releases</div>
+          </div>
+          <div class="settings-control">
+            <select class="form-select" id="setting-default-track" onchange="saveSetting('defaultTrack',this.value)">
+              <option value="internal">Internal Testing</option>
+              <option value="alpha">Alpha</option>
+              <option value="beta">Beta</option>
+              <option value="production">Production</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🗑 Data</div>
+        <div class="settings-row">
+          <div class="settings-label">
+            <div class="settings-label-title">Clear Saved Settings</div>
+            <div class="settings-label-sub">Resets all localStorage preferences (does not clear internal test links)</div>
+          </div>
+          <div class="settings-control">
+            <button class="btn btn-danger btn-sm" onclick="clearAllSettings()">Clear Settings</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-label">
+            <div class="settings-label-title">Clear Internal Test Links</div>
+            <div class="settings-label-sub">Remove all stored test links from browser</div>
+          </div>
+          <div class="settings-control">
+            <button class="btn btn-danger btn-sm" onclick="clearItls()">Clear Links</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end main-content -->
+</div><!-- end app-shell -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   CONSTANTS & CONFIG
+═══════════════════════════════════════════════════════════ */
+const OAUTH_CLIENT_ID = '566889120703-7jjmp8ond3q2knnitfk0kvnm4asde5mk.apps.googleusercontent.com';
+const OAUTH_SCOPE = 'https://www.googleapis.com/auth/androidpublisher';
+const PLAY_API = 'https://androidpublisher.googleapis.com/androidpublisher/v3/applications';
+
+const APP_GROUPS = [
+  {
+    group: 'Kids Games',
+    apps: [
+      {
+        name: 'ABC Kids: Tracing & Phonics',
+        package: 'com.rvappstudios.abc_kids_toddler_tracing_phonics',
+        icon: '🔤',
+        storeUrl: 'https://play.google.com/store/apps/details?id=com.rvappstudios.abc_kids_toddler_tracing_phonics'
+      }
+    ]
+  },
+  {
+    group: 'Parents Games',
+    apps: [
+      {
+        name: 'Balloon Pop: Match 3 Games',
+        package: 'com.rvappstudios.match3_balloon_puzzle_game',
+        icon: '🎈',
+        storeUrl: 'https://play.google.com/store/apps/details?id=com.rvappstudios.match3_balloon_puzzle_game'
+      }
+    ]
+  },
+  {
+    group: 'Applications',
+    apps: [
+    {
+        name: 'Alarm Clock: Mornings & Naps',
+        package: 'com.rvappstudios.alarm.clock.smart.sleep.timer.music',
+        icon: '⏰',
+        storeUrl: 'https://play.google.com/store/apps/details?id=com.rvappstudios.alarm.clock.smart.sleep.timer.music'
+      },
+      {
+        name: 'Sleep Timer: Turn Music Off',
+        package: 'com.rvappstudios.sleep.timer.off.music.relax',
+        icon: '',
+        storeUrl: 'https://play.google.com/store/apps/details?id=com.rvappstudios.sleep.timer.off.music.relax'
+      }
+    ]
+  }
+];
+
+/* ═══════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════ */
+let state = {
+  accessToken: null,
+  userProfile: null,
+  selectedApp: null,
+  selectedPkg: '',
+  manualPkgMode: false,
+  uploadFiles: { aab: null, mapping: null, symbols: null },
+  lastUploadResult: null,
+  logs: [],
+  logErrorCount: 0,
+  itls: {},        // { package: url }
+  settings: {},
+  currentEditId: null,
+  uploadRunning: false,
+  rawResponses: []
+};
+
+/* ═══════════════════════════════════════════════════════════
+   LOCK SCREEN
+═══════════════════════════════════════════════════════════ */
+function attemptUnlock() {
+  const val = document.getElementById('lock-input').value;
+  if (val === 'mk') {
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('app-shell').classList.add('visible');
+    init();
+  } else {
+    const err = document.getElementById('lock-error');
+    err.textContent = 'Incorrect passcode. Please try again.';
+    document.getElementById('lock-input').value = '';
+    setTimeout(() => { err.textContent = ''; }, 3000);
+  }
+}
+document.getElementById('lock-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') attemptUnlock();
+});
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════ */
+function init() {
+  loadSettings();
+  loadItls();
+  applyTheme(state.settings.theme || 'theme-light-classic');
+  renderAppSelector();
+  renderDashboard();
+  renderItlRows();
+  applySettingsUI();
+  addLog('info', 'App Init', 'Play Release Manager initialized');
+  checkProxyStatus();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════════════════════ */
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem('prm_settings');
+    state.settings = raw ? JSON.parse(raw) : {};
+  } catch(e) { state.settings = {}; }
+}
+
+function saveSettings() {
+  localStorage.setItem('prm_settings', JSON.stringify(state.settings));
+}
+
+function saveSetting(key, value) {
+  state.settings[key] = value;
+  saveSettings();
+}
+
+function applySettingsUI() {
+  const ts = document.getElementById('theme-select');
+  if (ts) ts.value = state.settings.theme || 'theme-light-classic';
+
+  const sr = document.getElementById('setting-show-raw');
+  if (sr) sr.checked = !!state.settings.showRaw;
+
+  const dt = document.getElementById('setting-default-track');
+  if (dt) dt.value = state.settings.defaultTrack || 'internal';
+
+  const ts2 = document.getElementById('track-select');
+  if (ts2 && state.settings.defaultTrack) ts2.value = state.settings.defaultTrack;
+}
+
+function clearAllSettings() {
+  localStorage.removeItem('prm_settings');
+  state.settings = {};
+  applySettingsUI();
+  applyTheme('theme-light-classic');
+  showAlert('settings-save-ok', 'Settings cleared.', 'info');
+  addLog('info', 'Settings', 'All settings cleared');
+}
+
+function clearItls() {
+  if (!confirm('Clear all stored internal test links?')) return;
+  localStorage.removeItem('prm_itls');
+  state.itls = {};
+  renderItlRows();
+  renderDashboard();
+  addLog('info', 'ITL', 'All internal test links cleared');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME
+═══════════════════════════════════════════════════════════ */
+function applyTheme(theme) {
+  const themes = ['theme-light-classic','theme-light-soft','theme-light-clean','theme-dark-blue','theme-dark-gray'];
+  document.body.classList.remove(...themes);
+  document.body.classList.add(theme);
+  state.settings.theme = theme;
+  saveSettings();
+  const ts = document.getElementById('theme-select');
+  if (ts) ts.value = theme;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════════════════ */
+const PAGE_TITLES = {
+  dashboard: 'Dashboard',
+  upload: 'Release Upload',
+  itl: 'Internal Test Links',
+  logs: 'Logs',
+  settings: 'Settings'
+};
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.add('active');
+
+  const navItem = document.querySelector(`[data-page="${name}"]`);
+  if (navItem) navItem.classList.add('active');
+
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[name] || name;
+
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'itl') renderItlRows();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   OAUTH / AUTH
+═══════════════════════════════════════════════════════════ */
+let tokenClient = null;
+
+function initGoogleAuth() {
+  if (typeof google === 'undefined') {
+    setTimeout(initGoogleAuth, 500);
+    return;
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: OAUTH_CLIENT_ID,
+    scope: OAUTH_SCOPE,
+    callback: handleTokenResponse
+  });
+  // gapi not needed — uploads go through local proxy
+}
+
+function handleTokenResponse(resp) {
+  if (resp.error) {
+    addLog('error', 'Auth', 'OAuth error: ' + resp.error);
+    updateAuthUI(false);
+    return;
+  }
+  state.accessToken = resp.access_token;
+  // token stored in state.accessToken; proxy reads it from FormData
+  fetchUserProfile();
+  addLog('success', 'Auth', 'Signed in successfully');
+  updateAuthUI(true);
+}
+
+function fetchUserProfile() {
+  fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+    headers: { Authorization: 'Bearer ' + state.accessToken }
+  }).then(r => r.json()).then(p => {
+    state.userProfile = p;
+    updateAuthUI(true);
+  }).catch(() => {});
+}
+
+function handleAuthClick() {
+  if (state.accessToken) {
+    // Sign out
+    if (typeof google !== 'undefined') {
+      google.accounts.oauth2.revoke(state.accessToken, () => {});
+    }
+    state.accessToken = null;
+    state.userProfile = null;
+    updateAuthUI(false);
+    addLog('info', 'Auth', 'Signed out');
+  } else {
+    if (!tokenClient) { initGoogleAuth(); setTimeout(handleAuthClick, 600); return; }
+    tokenClient.requestAccessToken();
+  }
+}
+
+function updateAuthUI(signedIn) {
+  const name = signedIn && state.userProfile ? (state.userProfile.name || state.userProfile.email) : 'Not signed in';
+  const email = signedIn && state.userProfile ? state.userProfile.email : '';
+  const initial = name ? name[0].toUpperCase() : '?';
+  const pic = signedIn && state.userProfile ? state.userProfile.picture : null;
+
+  // Sidebar
+  document.getElementById('sidebar-name').textContent = name;
+  document.getElementById('sidebar-status').textContent = signedIn ? email : 'Click to sign in';
+  const saa = document.getElementById('sidebar-avatar');
+  saa.innerHTML = pic ? `<img src="${pic}" alt="">` : initial;
+  document.getElementById('sidebar-auth-btn').textContent = signedIn ? 'Sign Out' : 'Sign In';
+
+  // Topbar badge
+  const badge = document.getElementById('auth-badge');
+  badge.textContent = signedIn ? (state.userProfile ? state.userProfile.email : 'Signed In') : 'Signed Out';
+  badge.className = 'auth-status-badge ' + (signedIn ? 'signed-in' : 'signed-out');
+
+  // Settings
+  const sab = document.getElementById('settings-auth-btn');
+  if (sab) sab.textContent = signedIn ? 'Sign Out' : 'Sign In';
+  const sas = document.getElementById('settings-auth-status');
+  if (sas) {
+    sas.textContent = signedIn ? 'Signed In' : 'Signed Out';
+    sas.className = 'auth-status-badge ' + (signedIn ? 'signed-in' : 'signed-out');
+  }
+
+  // Upload gate
+  const gate = document.getElementById('upload-auth-gate');
+  if (gate) gate.classList.toggle('hidden', signedIn);
+
+  renderDashboard();
+}
+
+// Init Google auth when GIS loads
+window.addEventListener('load', () => {
+  setTimeout(initGoogleAuth, 300);
+});
+
+/* ═══════════════════════════════════════════════════════════
+   APP SELECTOR (Upload page)
+═══════════════════════════════════════════════════════════ */
+function renderAppSelector() {
+  const container = document.getElementById('app-selector-list');
+  if (!container) return;
+  let html = '';
+  APP_GROUPS.forEach(group => {
+    html += `<div class="app-group-label">${group.group}</div>`;
+    group.apps.forEach(app => {
+      html += `
+        <div class="app-option" id="appopt-${app.package}" onclick="selectApp('${app.package}')">
+          <div class="app-option-icon">${app.icon}</div>
+          <div class="app-option-info">
+            <div class="app-option-name">${app.name}</div>
+            <div class="app-option-pkg">${app.package}</div>
+          </div>
+          <span class="app-tag">${group.group}</span>
+        </div>`;
+    });
+  });
+  container.innerHTML = html;
+}
+
+function selectApp(pkg) {
+  // Deselect all
+  document.querySelectorAll('.app-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('appopt-' + pkg)?.classList.add('selected');
+
+  const app = findApp(pkg);
+  state.selectedApp = app;
+  state.selectedPkg = pkg;
+
+  document.getElementById('selected-pkg-display').value = pkg;
+  updateUploadStepIndicators();
+}
+
+function findApp(pkg) {
+  for (const g of APP_GROUPS) {
+    const a = g.apps.find(a => a.package === pkg);
+    if (a) return { ...a, group: g.group };
+  }
+  return null;
+}
+
+function getAllApps() {
+  const apps = [];
+  APP_GROUPS.forEach(g => g.apps.forEach(a => apps.push({ ...a, group: g.group })));
+  return apps;
+}
+
+function toggleManualPkg() {
+  const cb = document.getElementById('manual-pkg-toggle');
+  cb.checked = !cb.checked;
+  state.manualPkgMode = cb.checked;
+  document.getElementById('manual-pkg-area').classList.toggle('hidden', !cb.checked);
+  document.getElementById('app-selector-list').classList.toggle('hidden', cb.checked);
+  if (!cb.checked) {
+    document.getElementById('selected-pkg-display').value = state.selectedPkg;
+  } else {
+    document.getElementById('manual-pkg-input').value = state.selectedPkg;
+  }
+}
+
+function onManualPkgChange() {
+  state.selectedPkg = document.getElementById('manual-pkg-input').value.trim();
+  document.getElementById('selected-pkg-display').value = state.selectedPkg;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FILE HANDLING
+═══════════════════════════════════════════════════════════ */
+function handleFileSelect(event, type, zoneId, nameId) {
+  const file = event.target.files[0];
+  if (!file) return;
+  state.uploadFiles[type] = file;
+  document.getElementById(nameId).textContent = file.name;
+  document.getElementById(zoneId).classList.add('has-file');
+}
+
+function handleDragOver(event, zoneId) {
+  event.preventDefault();
+  document.getElementById(zoneId).classList.add('dragover');
+}
+
+function handleDragLeave(zoneId) {
+  document.getElementById(zoneId).classList.remove('dragover');
+}
+
+function handleDrop(event, type, zoneId) {
+  event.preventDefault();
+  document.getElementById(zoneId).classList.remove('dragover');
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  state.uploadFiles[type] = file;
+  const nameId = type + '-filename';
+  document.getElementById(nameId).textContent = file.name;
+  document.getElementById(zoneId).classList.add('has-file');
+}
+
+function toggleOptional(type) {
+  const cb = document.getElementById('toggle-' + type);
+  cb.checked = !cb.checked;
+  const area = document.getElementById(type + '-area');
+  if (area) area.classList.toggle('hidden', !cb.checked);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UPLOAD FLOW
+═══════════════════════════════════════════════════════════ */
+function updateStage(id, status, msg) {
+  const icons = { pending:'⬜', running:'🔄', done:'✅', error:'❌', skip:'➖' };
+  const el = document.getElementById('stage-' + id);
+  if (!el) return;
+  el.className = 'upload-stage ' + (status === 'skip' ? 'pending' : status);
+  el.querySelector('.upload-stage-icon').textContent = icons[status] || '⬜';
+  el.querySelector('.upload-stage-status').textContent = msg || status;
+}
+
+function setProgress(pct) {
+  const wrap = document.getElementById('upload-progress-wrap');
+  const fill = document.getElementById('upload-progress-fill');
+  if (!wrap || !fill) return;
+  wrap.style.display = pct > 0 ? 'block' : 'none';
+  fill.style.width = pct + '%';
+}
+
+function resetStages() {
+  ['edit','aab','mapping','symbols','track','commit'].forEach(s => {
+    updateStage(s, 'pending', 'waiting');
+  });
+  setProgress(0);
+  document.getElementById('upload-result-banner').classList.remove('visible');
+  document.getElementById('upload-result-alert').classList.add('hidden');
+  document.getElementById('upload-result-alert').innerHTML = '';
+  document.getElementById('post-upload-itl').classList.add('hidden');
+  document.getElementById('raw-response-card').style.display = 'none';
+  state.rawResponses = [];
+}
+
+function updateUploadStepIndicators() {
+  // Simple active step: if app selected, step 1 done
+  if (state.selectedPkg) {
+    document.getElementById('step-1').className = 'step done';
+    document.getElementById('step-2').className = 'step active';
+  }
+}
+
+async function startUpload() {
+  if (state.uploadRunning) return;
+
+  const pkg = state.selectedPkg.trim();
+  if (!pkg) { showUploadError('Please select an app or enter a package name.'); return; }
+  if (!state.uploadFiles.aab) { showUploadError('Please select an AAB file to upload.'); return; }
+  if (!state.accessToken) { showUploadError('Please sign in with Google first.'); return; }
+
+  // Ensure proxy is reachable before starting
+  const proxyOk = await checkProxyStatus();
+  if (!proxyOk) {
+    showUploadError('Local proxy server is not running. Start it with: node server.js — then try again.');
+    return;
+  }
+
+  const doMapping = document.getElementById('toggle-mapping').checked && state.uploadFiles.mapping;
+  const doSymbols = document.getElementById('toggle-symbols').checked && state.uploadFiles.symbols;
+  const doTrack = document.getElementById('toggle-track').checked;
+  const doCommit = document.getElementById('toggle-commit').checked;
+  const track = document.getElementById('track-select').value;
+  const releaseName = document.getElementById('release-name').value.trim();
+  const releaseNotes = document.getElementById('release-notes').value.trim();
+  const releaseStatus = document.getElementById('release-status').value;
+
+  state.uploadRunning = true;
+  const btn = document.getElementById('upload-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Uploading...';
+
+  resetStages();
+  document.getElementById('step-2').className = 'step active';
+  setProgress(5);
+
+  let editId = null;
+  let versionCode = null;
+
+  try {
+    // ── Step 1: Create Edit ───────────────────────────────
+    updateStage('edit', 'running', 'creating...');
+    addLog('info', 'Create Edit', `Creating edit for ${pkg}`);
+
+    const editResp = await playApiCall('POST', `${PLAY_API}/${pkg}/edits`, {});
+    editId = editResp.id;
+    state.currentEditId = editId;
+    updateStage('edit', 'done', editId);
+    addLog('success', 'Create Edit', `Edit created: ${editId}`, editResp);
+    setProgress(20);
+    document.getElementById('step-2').className = 'step done';
+    document.getElementById('step-3').className = 'step active';
+
+    // ── Step 2: Upload AAB ────────────────────────────────
+    updateStage('aab', 'running', 'uploading...');
+    addLog('info', 'Upload AAB', `Uploading ${state.uploadFiles.aab.name} (${formatBytes(state.uploadFiles.aab.size)})`);
+
+    const uploadUrl = `https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/${pkg}/edits/${editId}/bundles`;
+    const aabResp = await proxyUpload(uploadUrl, 'application/octet-stream', state.uploadFiles.aab, (pct, speed, phase) => {
+      // pct here is Google-confirmed progress, not browser→proxy progress
+      const overallPct = phase === 'initiating' ? 21 : 20 + Math.round(pct * 0.75);
+      setProgress(Math.min(95, overallPct));
+      const label = phase === 'initiating' ? 'starting session…'
+                  : phase === 'done'        ? '100% — finalising…'
+                  : `${pct}%${speed ? ' · ' + speed : ''}`;
+      updateStage('aab', 'running', label);
+    });
+
+    versionCode = aabResp.versionCode;
+    updateStage('aab', 'done', `versionCode: ${versionCode}`);
+    addLog('success', 'Upload AAB', `AAB uploaded, versionCode: ${versionCode}`, aabResp);
+    pushRawResponse('AAB Upload', aabResp);
+    setProgress(45);
+
+    // Show banner
+    document.getElementById('result-version-code').textContent = versionCode;
+    document.getElementById('result-edit-id').textContent = editId;
+    document.getElementById('upload-result-banner').classList.add('visible');
+
+    // ── Step 3: Upload Mapping ────────────────────────────
+    if (doMapping && state.uploadFiles.mapping) {
+      updateStage('mapping', 'running', 'uploading...');
+      addLog('info', 'Upload Mapping', `Uploading ${state.uploadFiles.mapping.name}`);
+      // Mapping files are small — upload directly via multipart API (no proxy needed).
+      // Correct endpoint: /apks/{versionCode}/deobfuscationFiles/{type} — type in PATH, not query param
+      const mapUrl = `https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/${pkg}/edits/${editId}/apks/${versionCode}/deobfuscationFiles/proguard`;
+      const mapResp = await uploadDeobfuscationFile(mapUrl, state.uploadFiles.mapping);
+      updateStage('mapping', 'done', 'uploaded');
+      addLog('success', 'Upload Mapping', 'Mapping file uploaded', mapResp);
+      pushRawResponse('Mapping Upload', mapResp);
+    } else {
+      updateStage('mapping', 'skip', 'skipped');
+    }
+    setProgress(60);
+
+    // ── Step 4: Upload Native Symbols ────────────────────
+    if (doSymbols && state.uploadFiles.symbols) {
+      updateStage('symbols', 'running', 'uploading...');
+      addLog('info', 'Upload Symbols', `Uploading ${state.uploadFiles.symbols.name}`);
+      // Native symbols can be large — use proxy for streaming upload
+      // Correct endpoint: /apks/{versionCode}/deobfuscationFiles/{type}
+      const symUrl = `https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/${pkg}/edits/${editId}/apks/${versionCode}/deobfuscationFiles/nativeCode`;
+      const symResp = await uploadDeobfuscationFile(symUrl, state.uploadFiles.symbols);
+      updateStage('symbols', 'done', 'uploaded');
+      addLog('success', 'Upload Symbols', 'Native symbols uploaded', symResp);
+      pushRawResponse('Symbols Upload', symResp);
+    } else {
+      updateStage('symbols', 'skip', 'skipped');
+    }
+    setProgress(75);
+
+    // ── Step 5: Assign to Track ───────────────────────────
+    if (doTrack) {
+      updateStage('track', 'running', 'assigning...');
+      addLog('info', 'Assign Track', `Assigning versionCode ${versionCode} to ${track}`);
+
+      const trackBody = {
+        releases: [{
+          versionCodes: [versionCode.toString()],
+          status: releaseStatus,
+          ...(releaseName && { name: releaseName }),
+          ...(releaseNotes && {
+            releaseNotes: [{ language: 'en-US', text: releaseNotes }]
+          })
+        }]
+      };
+      const trackResp = await playApiCall('PUT', `${PLAY_API}/${pkg}/edits/${editId}/tracks/${track}`, trackBody);
+      updateStage('track', 'done', track);
+      addLog('success', 'Assign Track', `Assigned to ${track} track`, trackResp);
+      pushRawResponse('Track Assignment', trackResp);
+    } else {
+      updateStage('track', 'skip', 'skipped');
+    }
+    setProgress(88);
+
+    // ── Step 6: Commit Edit ───────────────────────────────
+    if (doCommit) {
+      updateStage('commit', 'running', 'committing...');
+      addLog('info', 'Commit Edit', `Committing edit ${editId}`);
+      const commitResp = await playApiCall('POST', `${PLAY_API}/${pkg}/edits/${editId}:commit`, {});
+      updateStage('commit', 'done', 'committed ✓');
+      addLog('success', 'Commit Edit', `Edit committed successfully`, commitResp);
+      pushRawResponse('Commit', commitResp);
+    } else {
+      updateStage('commit', 'skip', 'skipped');
+    }
+    setProgress(100);
+
+    document.getElementById('step-3').className = 'step done';
+    document.getElementById('step-4').className = 'step done';
+
+    // Store last result
+    state.lastUploadResult = {
+      pkg, versionCode, editId, track,
+      timestamp: new Date().toISOString()
+    };
+    state.settings['lastUpload_' + pkg] = state.lastUploadResult;
+    saveSettings();
+
+    // Show success
+    showUploadAlert(`✅ Release uploaded successfully! Version Code: ${versionCode}`, 'success');
+
+    // Show ITL if available
+    const itl = state.itls[pkg];
+    if (itl) {
+      document.getElementById('post-itl-link').textContent = itl;
+      document.getElementById('post-upload-itl').classList.remove('hidden');
+    }
+
+    // Raw panel
+    if (state.settings.showRaw) {
+      document.getElementById('raw-response-card').style.display = 'block';
+      document.getElementById('raw-response-content').textContent = JSON.stringify(state.rawResponses, null, 2);
+    }
+
+    renderDashboard();
+
+  } catch (err) {
+    const msg = err.message || String(err);
+    addLog('error', 'Upload', msg);
+    showUploadError('Upload failed: ' + msg);
+    // Mark currently running step as error
+    ['edit','aab','mapping','symbols','track','commit'].forEach(s => {
+      const el = document.getElementById('stage-' + s);
+      if (el && el.classList.contains('running')) {
+        updateStage(s, 'error', 'failed');
+      }
+    });
+
+    // Try to delete edit if we have one
+    if (editId) {
+      try {
+        await playApiCall('DELETE', `${PLAY_API}/${pkg}/edits/${editId}`, null);
+        addLog('info', 'Cleanup', `Edit ${editId} deleted after failure`);
+      } catch(e2) {}
+    }
+  } finally {
+    state.uploadRunning = false;
+    btn.disabled = false;
+    btn.innerHTML = '🚀 Start Upload';
+    setProgress(0);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   API HELPERS
+═══════════════════════════════════════════════════════════ */
+async function playApiCall(method, url, body) {
+  const opts = {
+    method,
+    headers: {
+      'Authorization': 'Bearer ' + state.accessToken,
+      'Content-Type': 'application/json'
+    }
+  };
+  if (body !== null && method !== 'GET' && method !== 'DELETE') {
+    opts.body = JSON.stringify(body);
+  }
+  const resp = await fetch(url, opts);
+  const text = await resp.text();
+  let data;
+  try { data = JSON.parse(text); } catch(e) { data = { raw: text }; }
+  if (!resp.ok) {
+    const errMsg = data?.error?.message || data?.error || text || `HTTP ${resp.status}`;
+    throw new Error(errMsg);
+  }
+  return data;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PROXY UPLOAD — streams File objects via local server.js
+   The proxy receives the file as a stream, initiates a
+   resumable upload session with Google, and pipes the bytes
+   in 8 MB chunks — no memory limit, works for files >1 GB.
+═══════════════════════════════════════════════════════════ */
+const PROXY_BASE = 'http://localhost:7842';
+
+/**
+ * Check if the local proxy is alive.
+ * Updates the proxy badge in the topbar.
+ * @returns {boolean} true if proxy is reachable
+ */
+async function checkProxyStatus() {
+  const badge = document.getElementById('proxy-badge');
+  const banner = document.getElementById('proxy-status-banner');
+  const msg    = document.getElementById('proxy-status-msg');
+  try {
+    const r = await fetch(PROXY_BASE + '/ping', { signal: AbortSignal.timeout(2500) });
+    if (r.ok) {
+      if (badge)  { badge.textContent = '🟢 Proxy'; badge.className = 'auth-status-badge signed-in'; }
+      if (banner) banner.classList.add('hidden');
+      return true;
+    }
+    throw new Error('non-ok');
+  } catch(e) {
+    if (badge)  { badge.textContent = '🔴 Proxy'; badge.className = 'auth-status-badge signed-out'; }
+    if (banner) { banner.className = 'alert alert-error'; banner.classList.remove('hidden'); }
+    if (msg)    msg.innerHTML = `
+      <strong>Local proxy not running.</strong> Start it once in a terminal, then reload:<br>
+      <code style="font-family:var(--font-mono);font-size:0.82rem;background:var(--surface2);padding:3px 8px;border-radius:4px;display:inline-block;margin-top:6px;">node server.js</code>
+      <button class="btn btn-sm btn-secondary" style="margin-left:10px;" onclick="checkProxyStatus()">↻ Recheck</button>`;
+    return false;
+  }
+}
+
+/**
+ * Upload a File through the local proxy with real Google-side progress.
+ *
+ * HOW IT WORKS
+ * The proxy response is a text/event-stream (SSE). The browser POSTs the
+ * file as multipart/form-data and immediately starts reading Server-Sent
+ * Events back from the same connection. The proxy emits:
+ *
+ *   event: heartbeat  — connection alive
+ *   event: progress   — { uploaded, total, pct, speed, phase }
+ *   event: done       — { ...googleJsonResponse }
+ *   event: error      — { message }
+ *
+ * This means the progress bar reflects actual bytes confirmed by Google,
+ * not bytes sent to the local proxy — so it keeps moving the whole time.
+ *
+ * @param {string}   googleUrl    - Google Play API upload endpoint
+ * @param {string}   contentType  - MIME type (unused by proxy but kept for API compat)
+ * @param {File}     file         - File object from <input type="file">
+ * @param {Function} [onProgress] - Called with (pct 0-100, speedStr, phaseStr)
+ * @returns {Promise<Object>}     - Resolves with Google's JSON response
+ */
+async function proxyUpload(googleUrl, contentType, file, onProgress) {
+  const sep       = googleUrl.includes('?') ? '&' : '?';
+  const targetUrl = googleUrl + sep + 'uploadType=resumable';
+
+  const formData = new FormData();
+  formData.append('token',    state.accessToken);
+  formData.append('url',      targetUrl);
+  formData.append('fileSize', file.size.toString()); // server needs this before the stream starts
+  formData.append('file',     file, file.name);      // file must be last field
+
+  // POST the file and read the SSE response as a streaming text body
+  let response;
+  try {
+    response = await fetch(PROXY_BASE + '/upload', {
+      method: 'POST',
+      body:   formData,
+      // No timeout — large files take minutes. fetch() has no built-in timeout.
+    });
+  } catch (e) {
+    throw new Error('Cannot reach proxy server. Is server.js running? (' + e.message + ')');
+  }
+
+  if (!response.ok && response.status !== 200) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`Proxy returned HTTP ${response.status}: ${text}`);
+  }
+
+  // Read the SSE stream line by line using the WHATWG Streams API
+  return new Promise((resolve, reject) => {
+    const reader  = response.body.getReader();
+    const decoder = new TextDecoder();
+    let   buf     = '';  // accumulates partial SSE lines
+    let   lastEvt = '';  // most recent named event type
+
+    function processLines(text) {
+      buf += text;
+      const lines = buf.split('\n');
+      buf = lines.pop(); // keep incomplete last line
+
+      for (const raw of lines) {
+        const line = raw.trimEnd();
+        if (line.startsWith('event:')) {
+          lastEvt = line.slice(6).trim();
+        } else if (line.startsWith('data:')) {
+          const dataStr = line.slice(5).trim();
+          let   data;
+          try { data = JSON.parse(dataStr); } catch(_) { data = { raw: dataStr }; }
+
+          switch (lastEvt) {
+            case 'heartbeat':
+              // Connection alive — ignore
+              break;
+
+            case 'progress':
+              if (onProgress) {
+                onProgress(data.pct || 0, data.speed || '', data.phase || '');
+              }
+              break;
+
+            case 'done':
+              resolve(data);
+              break;
+
+            case 'error':
+              reject(new Error(data.message || JSON.stringify(data)));
+              break;
+
+            default:
+              // Unnamed data frame — try to detect done/error by shape
+              if (data.versionCode)           resolve(data);
+              else if (data.error?.message)   reject(new Error(data.error.message));
+              break;
+          }
+          lastEvt = ''; // reset after consuming data line
+        }
+        // blank lines are SSE dispatch signals — we handle per-line above
+      }
+    }
+
+    function pump() {
+      reader.read().then(({ done, value }) => {
+        if (done) {
+          // Stream closed without a 'done' event — treat remaining buffer
+          if (buf.trim()) {
+            try {
+              const d = JSON.parse(buf.trim().replace(/^data:\s*/,''));
+              if (d.versionCode) resolve(d);
+              else reject(new Error(d?.error?.message || 'Stream ended unexpectedly'));
+            } catch(_) {
+              reject(new Error('Upload stream closed unexpectedly'));
+            }
+          }
+          return;
+        }
+        processLines(decoder.decode(value, { stream: true }));
+        pump();
+      }).catch(err => reject(new Error('SSE stream read error: ' + err.message)));
+    }
+
+    pump();
+  });
+}
+
+/**
+ * Upload a deobfuscation file (mapping.txt or native symbols .zip) through
+ * the local proxy server's /upload-small endpoint.
+ *
+ * WHY PROXY: The Google Play upload endpoints block browser binary uploads
+ * via CORS preflight regardless of file size or uploadType — same root cause
+ * as the AAB uploads. The proxy forwards the file server-side where CORS
+ * doesn't apply.
+ *
+ * The proxy uses uploadType=multipart (not resumable) since these files are
+ * small — the whole file is buffered in one shot server-side.
+ *
+ * @param {string} url  - Google API upload URL (proxy will add uploadType)
+ * @param {File}   file - The File object to upload
+ * @returns {Object}    - Parsed Google API JSON response
+ */
+async function uploadDeobfuscationFile(url, file) {
+  const formData = new FormData();
+  formData.append('token', state.accessToken);
+  formData.append('url',   url);
+  formData.append('file',  file, file.name);
+
+  let resp;
+  try {
+    resp = await fetch(PROXY_BASE + '/upload-small', {
+      method: 'POST',
+      body:   formData,
+    });
+  } catch(e) {
+    throw new Error('Cannot reach proxy server. Is server.js running? (' + e.message + ')');
+  }
+
+  const text = await resp.text();
+  let data;
+  try { data = JSON.parse(text); } catch(e) { data = { raw: text }; }
+
+  if (!resp.ok) {
+    const msg = data?.error?.message || data?.error || text || `HTTP ${resp.status}`;
+    throw new Error(msg);
+  }
+  if (data?.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data;
+}
+
+/** Format bytes to human-readable string */
+function formatBytes(bytes) {
+  if (bytes < 1024)        return bytes + ' B';
+  if (bytes < 1048576)     return (bytes / 1024).toFixed(1) + ' KB';
+  if (bytes < 1073741824)  return (bytes / 1048576).toFixed(1) + ' MB';
+  return (bytes / 1073741824).toFixed(2) + ' GB';
+}
+
+function pushRawResponse(label, data) {
+  state.rawResponses.push({ label, data, ts: new Date().toISOString() });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UPLOAD UI HELPERS
+═══════════════════════════════════════════════════════════ */
+function showUploadError(msg) {
+  const el = document.getElementById('upload-result-alert');
+  el.className = 'alert alert-error';
+  el.innerHTML = `<span class="alert-icon">❌</span><span>${escHtml(msg)}</span>`;
+  el.classList.remove('hidden');
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showUploadAlert(msg, type = 'success') {
+  const el = document.getElementById('upload-result-alert');
+  const icons = { success:'✅', error:'❌', info:'ℹ️', warn:'⚠️' };
+  el.className = 'alert alert-' + type;
+  el.innerHTML = `<span class="alert-icon">${icons[type]||'ℹ️'}</span><span>${escHtml(msg)}</span>`;
+  el.classList.remove('hidden');
+}
+
+function toggleRawPanel() {
+  const panel = document.getElementById('raw-response-panel');
+  const icon = document.getElementById('raw-toggle-icon');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  icon.textContent = isOpen ? '▶' : '▼';
+}
+
+function openPostItl() {
+  const pkg = state.selectedPkg;
+  const itl = state.itls[pkg];
+  if (itl) window.open(itl, '_blank');
+}
+
+function copyPostItl() {
+  const pkg = state.selectedPkg;
+  const itl = state.itls[pkg];
+  if (itl) { navigator.clipboard.writeText(itl).catch(() => {}); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INTERNAL TEST LINKS
+═══════════════════════════════════════════════════════════ */
+function loadItls() {
+  try {
+    const raw = localStorage.getItem('prm_itls');
+    state.itls = raw ? JSON.parse(raw) : {};
+  } catch(e) { state.itls = {}; }
+}
+
+function saveItls() {
+  localStorage.setItem('prm_itls', JSON.stringify(state.itls));
+}
+
+function renderItlRows() {
+  const container = document.getElementById('itl-rows-container');
+  if (!container) return;
+  const apps = getAllApps();
+  let html = '';
+  apps.forEach(app => {
+    const val = state.itls[app.package] || '';
+    html += `
+      <div class="itl-row">
+        <div class="itl-info">
+          <div class="itl-app-name">${escHtml(app.name)}</div>
+          <div class="itl-pkg">${escHtml(app.package)}</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);">${escHtml(app.group)}</div>
+        </div>
+        <input class="itl-link-input" type="url"
+          id="itl-input-${app.package.replace(/\./g,'_')}"
+          value="${escHtml(val)}"
+          placeholder="https://play.google.com/apps/internaltest/..."
+          onchange="onItlChange('${app.package}', this.value)">
+        <div class="itl-actions">
+          <button class="btn btn-primary btn-xs" onclick="saveItl('${app.package}')">Save</button>
+          <button class="btn btn-secondary btn-xs" onclick="openItl('${app.package}')" ${!val?'disabled':''}>Open</button>
+          <button class="btn btn-secondary btn-xs" onclick="copyItl('${app.package}')" ${!val?'disabled':''}>Copy</button>
+        </div>
+      </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function onItlChange(pkg, val) {
+  state.itls[pkg] = val.trim();
+}
+
+function saveItl(pkg) {
+  const inputId = 'itl-input-' + pkg.replace(/\./g,'_');
+  const input = document.getElementById(inputId);
+  const val = input ? input.value.trim() : '';
+
+  if (val && !val.startsWith('https://play.google.com/apps/internaltest/')) {
+    showItlAlert('Invalid link. Must start with https://play.google.com/apps/internaltest/', 'error');
+    return;
+  }
+  state.itls[pkg] = val;
+  saveItls();
+  renderItlRows();
+  renderDashboard();
+  showItlAlert(`✅ Saved internal test link for ${pkg}`, 'success');
+  addLog('success', 'ITL Save', `Internal test link saved for ${pkg}`);
+}
+
+function openItl(pkg) {
+  const val = state.itls[pkg];
+  if (val) window.open(val, '_blank');
+}
+
+function copyItl(pkg) {
+  const val = state.itls[pkg];
+  if (val) {
+    navigator.clipboard.writeText(val).then(() => {
+      showItlAlert('📋 Link copied to clipboard!', 'info');
+    }).catch(() => showItlAlert('Copy failed', 'error'));
+  }
+}
+
+function showItlAlert(msg, type) {
+  const el = document.getElementById('itl-save-alert');
+  if (!el) return;
+  const icons = { success:'✅', error:'❌', info:'ℹ️', warn:'⚠️' };
+  el.className = 'alert alert-' + type;
+  el.innerHTML = `<span class="alert-icon">${icons[type]||'ℹ️'}</span><span>${escHtml(msg)}</span>`;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 4000);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════════════════════════ */
+function renderDashboard() {
+  const container = document.getElementById('dashboard-apps-container');
+  if (!container) return;
+
+  const apps = getAllApps();
+  let html = '<div class="grid-3">';
+
+  apps.forEach(app => {
+    const itl = state.itls[app.package] || '';
+    const lastUpload = state.settings['lastUpload_' + app.package];
+    const authOk = !!state.accessToken;
+
+    html += `
+      <div class="dash-app-card">
+        <div class="dash-app-header">
+          <div class="dash-app-icon">${app.icon}</div>
+          <div>
+            <div class="dash-app-name">${escHtml(app.name)}</div>
+            <div class="dash-app-pkg">${escHtml(app.package)}</div>
+          </div>
+        </div>
+        <div class="dash-meta">
+          <div class="dash-meta-item"><span>🏷</span>${escHtml(app.group)}</div>
+          ${app.storeUrl ? `<div class="dash-meta-item"><a href="${app.storeUrl}" target="_blank" style="color:var(--accent);">Play Store ↗</a></div>` : ''}
+          ${lastUpload ? `<div class="dash-meta-item"><span>📦</span>Last v: <code>${lastUpload.versionCode}</code></div>` : ''}
+        </div>
+        <div class="dash-itl-row">
+          <span class="dash-itl-label">🔗 Test Link</span>
+          ${itl
+            ? `<span class="dash-itl-link">${escHtml(itl)}</span>
+               <button class="btn btn-xs btn-secondary" onclick="openItl('${app.package}')">Open</button>
+               <button class="btn btn-xs btn-secondary" onclick="copyItl('${app.package}')">Copy</button>`
+            : `<span class="dash-itl-missing">No internal test link — add one in the <a href="#" onclick="showPage('itl');return false;">Internal Test Links</a> section</span>`
+          }
+        </div>
+        <div class="btn-group" style="margin-top:12px;">
+          <button class="btn btn-primary btn-sm" onclick="goUploadApp('${app.package}')">📦 Upload Release</button>
+          ${app.storeUrl ? `<button class="btn btn-secondary btn-sm" onclick="window.open('${app.storeUrl}','_blank')">🔗 Store Page</button>` : ''}
+        </div>
+        <div style="margin-top:8px;font-size:0.72rem;color:var(--text-muted);">
+          Auth: <span class="${authOk ? 'text-success' : 'text-error'}">${authOk ? '✅ Signed in' : '❌ Not signed in'}</span>
+          ${lastUpload ? ` · Last: ${new Date(lastUpload.timestamp).toLocaleDateString()}` : ''}
+        </div>
+      </div>`;
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function goUploadApp(pkg) {
+  selectApp(pkg);
+  showPage('upload');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LOGS
+═══════════════════════════════════════════════════════════ */
+function addLog(type, action, message, data) {
+  const entry = {
+    id: Date.now() + Math.random(),
+    type, action, message,
+    data: data || null,
+    ts: new Date().toISOString()
+  };
+  state.logs.unshift(entry);
+  if (type === 'error') state.logErrorCount++;
+  renderLogs();
+  updateLogBadge();
+}
+
+function renderLogs() {
+  const container = document.getElementById('logs-container');
+  if (!container) return;
+  if (!state.logs.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">No logs yet</div><div class="empty-state-sub">Activity will appear here</div></div>`;
+    return;
+  }
+  container.innerHTML = state.logs.map(log => `
+    <div class="log-entry">
+      <div class="log-header">
+        <span class="log-badge ${log.type}">${log.type.toUpperCase()}</span>
+        <span class="log-time">${new Date(log.ts).toLocaleTimeString()}</span>
+        <span class="log-action">${escHtml(log.action)}</span>
+      </div>
+      <div class="log-message">${escHtml(log.message)}</div>
+      ${log.data ? `
+        <button class="log-json-toggle" onclick="toggleLogJson('${log.id}')">▶ View JSON</button>
+        <div class="log-json-panel" id="logjson-${log.id}">
+          <pre>${escHtml(JSON.stringify(log.data, null, 2))}</pre>
+        </div>` : ''}
+    </div>`).join('');
+}
+
+function toggleLogJson(id) {
+  const panel = document.getElementById('logjson-' + id);
+  if (!panel) return;
+  panel.classList.toggle('open');
+  const btn = panel.previousElementSibling;
+  btn.textContent = panel.classList.contains('open') ? '▼ Hide JSON' : '▶ View JSON';
+}
+
+function clearLogs() {
+  if (!confirm('Clear all logs?')) return;
+  state.logs = [];
+  state.logErrorCount = 0;
+  renderLogs();
+  updateLogBadge();
+}
+
+function exportLogs() {
+  const blob = new Blob([JSON.stringify(state.logs, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'prm-logs-' + Date.now() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function updateLogBadge() {
+  const badge = document.getElementById('log-badge');
+  if (!badge) return;
+  const errors = state.logs.filter(l => l.type === 'error').length;
+  if (errors > 0) {
+    badge.textContent = errors;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MISC HELPERS
+═══════════════════════════════════════════════════════════ */
+function showAlert(containerId, msg, type) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const icons = { success:'✅', error:'❌', info:'ℹ️', warn:'⚠️' };
+  el.className = 'alert alert-' + type;
+  el.innerHTML = `<span class="alert-icon">${icons[type]||'ℹ️'}</span><span>${escHtml(msg)}</span>`;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+function escHtml(str) {
+  if (typeof str !== 'string') return String(str ?? '');
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
